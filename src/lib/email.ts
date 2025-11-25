@@ -1,15 +1,7 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 import prisma from './db'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_PORT === '465',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-})
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 interface EmailOptions {
   to: string
@@ -20,12 +12,16 @@ interface EmailOptions {
 
 async function sendEmail({ to, subject, html, template = 'general' }: EmailOptions) {
   try {
-    await transporter.sendMail({
+    const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'Artist Gallery <noreply@artistgallery.com>',
       to,
       subject,
       html,
     })
+
+    if (error) {
+      throw new Error(error.message)
+    }
 
     // Log email
     await prisma.emailLog.create({
@@ -37,7 +33,7 @@ async function sendEmail({ to, subject, html, template = 'general' }: EmailOptio
       },
     })
 
-    return { success: true }
+    return { success: true, id: data?.id }
   } catch (error) {
     console.error('Email sending failed:', error)
 
@@ -81,13 +77,13 @@ const baseTemplate = (content: string) => `
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎨 Artist Gallery</h1>
+      <h1>Artist Gallery</h1>
     </div>
     <div class="content">
       ${content}
     </div>
     <div class="footer">
-      <p>© ${new Date().getFullYear()} Artist Gallery. All rights reserved.</p>
+      <p>${new Date().getFullYear()} Artist Gallery. All rights reserved.</p>
       <p>You received this email because you're a member of Artist Gallery.</p>
     </div>
   </div>
@@ -97,7 +93,7 @@ const baseTemplate = (content: string) => `
 
 export async function sendWelcomeEmail(to: string, name: string) {
   const html = baseTemplate(`
-    <h2>Welcome to Artist Gallery, ${name}! 🎉</h2>
+    <h2>Welcome to Artist Gallery, ${name}!</h2>
     <p>We're thrilled to have you join our community of art lovers and creators.</p>
     <p>Here's what you can do:</p>
     <ul>
@@ -111,7 +107,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
     <p>The Artist Gallery Team</p>
   `)
 
-  return sendEmail({ to, subject: 'Welcome to Artist Gallery! 🎨', html, template: 'welcome' })
+  return sendEmail({ to, subject: 'Welcome to Artist Gallery!', html, template: 'welcome' })
 }
 
 export async function sendOrderConfirmationEmail(
@@ -138,7 +134,7 @@ export async function sendOrderConfirmationEmail(
     .join('')
 
   const html = baseTemplate(`
-    <h2>Order Confirmed! 🎉</h2>
+    <h2>Order Confirmed!</h2>
     <p>Thank you for your purchase! Your order has been confirmed.</p>
 
     <h3>Order #${orderDetails.orderId}</h3>
@@ -173,7 +169,7 @@ export async function sendOrderShippedEmail(
   }
 ) {
   const html = baseTemplate(`
-    <h2>Your Order Has Shipped! 📦</h2>
+    <h2>Your Order Has Shipped!</h2>
     <p>Great news! Your order #${orderDetails.orderId} is on its way.</p>
 
     ${
@@ -213,7 +209,7 @@ export async function sendArtistSaleNotificationEmail(
   }
 ) {
   const html = baseTemplate(`
-    <h2>Congratulations! You Made a Sale! 💰</h2>
+    <h2>Congratulations! You Made a Sale!</h2>
     <p>Your artwork has found a new home!</p>
 
     <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -260,7 +256,7 @@ export async function sendNewFollowerEmail(
   followerDetails: { name: string; profileUrl: string }
 ) {
   const html = baseTemplate(`
-    <h2>You Have a New Follower! 👋</h2>
+    <h2>You Have a New Follower!</h2>
     <p><strong>${followerDetails.name}</strong> started following you on Artist Gallery.</p>
 
     <a href="${followerDetails.profileUrl}" class="button">View Profile</a>

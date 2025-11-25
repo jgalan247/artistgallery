@@ -23,7 +23,7 @@ A modern, full-stack art marketplace built with Next.js 14, enabling artists to 
 - **Payments**: SumUp (OAuth)
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
-- **Email**: Nodemailer
+- **Email**: Resend
 - **Animations**: Framer Motion
 
 ## Getting Started
@@ -33,7 +33,7 @@ A modern, full-stack art marketplace built with Next.js 14, enabling artists to 
 - Node.js 18+
 - PostgreSQL database
 - SumUp merchant account
-- SMTP server (or Gmail account)
+- Resend account (for emails)
 
 ### Installation
 
@@ -64,10 +64,8 @@ SUMUP_REDIRECT_URI="http://localhost:3000/api/auth/sumup"
 SUMUP_MERCHANT_EMAIL="your-merchant-email"
 SUMUP_MERCHANT_CODE="your-merchant-code"
 SUMUP_REFRESH_TOKEN="your-refresh-token"
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT="587"
-SMTP_USER="your-email"
-SMTP_PASSWORD="your-app-password"
+RESEND_API_KEY="re_your_resend_api_key"
+EMAIL_FROM="Artist Gallery <noreply@yourdomain.com>"
 ```
 
 4. Set up the database:
