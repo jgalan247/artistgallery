@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { z } from 'zod'
 import prisma from '@/lib/db'
 import { authOptions } from '@/lib/auth'
-import { createCheckoutSession } from '@/lib/stripe'
+import { createCheckoutSession } from '@/lib/sumup'
 
 const checkoutSchema = z.object({
   items: z.array(
@@ -54,18 +54,16 @@ export async function POST(request: Request) {
         artworkId: artwork.id,
         title: artwork.title,
         price: artwork.price,
-        image: artwork.images[0],
         quantity: item.quantity,
-        artistStripeAccountId: artwork.artist.stripeAccountId || undefined,
       }
     })
 
-    // Create Stripe checkout session
+    // Create SumUp checkout session
     const checkoutSession = await createCheckoutSession({
       items: checkoutItems,
       userId: session.user.id,
       customerEmail: session.user.email,
-      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
       cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/cart`,
       metadata: {
         artworkIds: artworkIds.join(','),

@@ -7,7 +7,7 @@ A modern, full-stack art marketplace built with Next.js 14, enabling artists to 
 - **Gallery Browsing**: Browse artworks with filtering by category, medium, price range
 - **Artist Profiles**: Dedicated pages for artists to showcase their portfolio
 - **Shopping Cart**: Full shopping cart functionality with persistent storage
-- **Secure Checkout**: Stripe integration for secure payment processing
+- **Secure Checkout**: SumUp integration with OAuth for secure payment processing
 - **Artist Dashboard**: Complete dashboard for artists to manage artworks, view sales, and track analytics
 - **Email Notifications**: Automated emails for order confirmations, shipping updates, and sale notifications
 - **Authentication**: Secure authentication with NextAuth.js (credentials + Google OAuth)
@@ -20,7 +20,7 @@ A modern, full-stack art marketplace built with Next.js 14, enabling artists to 
 - **Language**: TypeScript
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth.js
-- **Payments**: Stripe
+- **Payments**: SumUp (OAuth)
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
 - **Email**: Nodemailer
@@ -32,7 +32,7 @@ A modern, full-stack art marketplace built with Next.js 14, enabling artists to 
 
 - Node.js 18+
 - PostgreSQL database
-- Stripe account
+- SumUp merchant account
 - SMTP server (or Gmail account)
 
 ### Installation
@@ -58,9 +58,12 @@ Edit `.env` with your configuration:
 DATABASE_URL="postgresql://..."
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secret"
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_PUBLISHABLE_KEY="pk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
+SUMUP_CLIENT_ID="your-sumup-client-id"
+SUMUP_CLIENT_SECRET="your-sumup-client-secret"
+SUMUP_REDIRECT_URI="http://localhost:3000/api/auth/sumup"
+SUMUP_MERCHANT_EMAIL="your-merchant-email"
+SUMUP_MERCHANT_CODE="your-merchant-code"
+SUMUP_REFRESH_TOKEN="your-refresh-token"
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_USER="your-email"
@@ -98,7 +101,7 @@ src/
 │   ├── auth.ts           # Authentication configuration
 │   ├── db.ts             # Database client
 │   ├── email.ts          # Email service
-│   ├── stripe.ts         # Stripe integration
+│   ├── sumup.ts          # SumUp OAuth integration
 │   └── utils.ts          # Utility functions
 ├── store/                 # Zustand stores
 ├── types/                 # TypeScript types
@@ -116,22 +119,34 @@ src/
 | `/api/artworks/[id]` | DELETE | Delete artwork |
 | `/api/artists` | GET | List artists |
 | `/api/favorites` | GET/POST/DELETE | Manage favorites |
-| `/api/checkout` | POST | Create checkout session |
-| `/api/webhooks/stripe` | POST | Stripe webhook handler |
+| `/api/checkout` | POST | Create SumUp checkout session |
+| `/api/checkout/callback` | GET | Handle SumUp payment callback |
+| `/api/webhooks/sumup` | POST | SumUp webhook handler |
+| `/api/auth/sumup` | GET | SumUp OAuth flow |
 
-## Stripe Integration
+## SumUp Integration
 
-The application uses Stripe for payment processing:
+The application uses SumUp for payment processing with OAuth authentication:
 
-1. **Checkout Sessions**: Secure hosted checkout pages
-2. **Webhooks**: Handle payment events (success, failure)
-3. **Connect**: Support for artist payouts (optional)
+1. **OAuth Flow**: Secure authentication with SumUp API
+2. **Checkout API**: Create hosted checkout pages
+3. **Webhooks**: Handle payment events (completed, failed, refunded)
+4. **Callbacks**: Process payment results after redirect
 
-### Setting up Stripe Webhooks
+### Setting up SumUp
 
-```bash
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-```
+1. Create a SumUp developer account at https://developer.sumup.com
+2. Create an application to get your Client ID and Client Secret
+3. Configure the redirect URI to `http://localhost:3000/api/auth/sumup`
+4. Complete OAuth flow to get your refresh token
+5. Configure webhook URL to `https://your-domain.com/api/webhooks/sumup`
+
+### OAuth Flow
+
+To connect your SumUp account:
+1. Navigate to `/api/auth/sumup?action=connect`
+2. Authorize the application with SumUp
+3. The refresh token will be stored for future API calls
 
 ## Email Templates
 

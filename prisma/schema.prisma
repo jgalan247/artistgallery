@@ -99,8 +99,8 @@ model Artist {
   location    String?
   featured    Boolean  @default(false)
   verified    Boolean  @default(false)
-  stripeAccountId String?
-  stripeOnboarded Boolean @default(false)
+  sumupMerchantCode String?
+  paymentOnboarded Boolean @default(false)
   totalSales  Int      @default(0)
   totalEarnings Float  @default(0)
   createdAt   DateTime @default(now())
@@ -185,8 +185,8 @@ model Order {
   tax             Float       @default(0)
   shipping        Float       @default(0)
   total           Float
-  stripePaymentId String?
-  stripeSessionId String?
+  sumupCheckoutId String?
+  sumupTransactionId String?
 
   // Shipping info
   shippingName    String?
